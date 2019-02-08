@@ -24,7 +24,7 @@ class FirstTab extends Component {
 
   // Embade the google maps script to html DOM and attache the callback to the window object.
   renderMap = () => {
-    loadScript('https://maps.googleapis.com/maps/api/js?key=AIzaSyDzlczruooLb_Y0ek5e8VY8Z_sPxva3ofQ&callback=initMap');
+    loadScript('');
     window.initMap = this.initMap
   }
 
