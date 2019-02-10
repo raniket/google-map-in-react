@@ -74,7 +74,6 @@ class FirstTab extends Component {
 
     map.data.setStyle({
       strokeWeight: 1,
-      strokeColor: 'DodgerBlue',
       strokeOpacity: 0.9,
     });
 
@@ -82,6 +81,7 @@ class FirstTab extends Component {
     new window.google.maps.Polygon({
       map: map,
       paths: outerCoords,
+      fillColor: '#ffffff',
       strokeColor: '#000000',
       strokeOpacity: 0.8,
       strokeWeight: 2,  
@@ -93,7 +93,9 @@ class FirstTab extends Component {
     // Polygon for Gurugram.
     const gurugramPolygon = new window.google.maps.Polygon({
       map: map,
-      paths:  this.state.coordinates
+      paths:  this.state.coordinates,
+      strokeColor: '#d500f9',
+      fillColor: '#fb8c00',
     });
 
     // Remove the grids which are not part of Gurugram.
@@ -107,7 +109,13 @@ class FirstTab extends Component {
     });
 
     // Draw visible grids on the map.
-    map.data.add({geometry: new window.google.maps.Data.Polygon([outerCoords, ...visibleGrids])})
+    new window.google.maps.Polygon({
+      paths: [outerCoords, ...visibleGrids],
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: '#000000',
+      fillOpacity: 0.35,
+    }).setMap(map);
     
   }
 
