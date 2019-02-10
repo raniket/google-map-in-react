@@ -124,8 +124,8 @@ class FirstTab extends Component {
 
 // Embade the google mpas script tag to html DOM as first script tag.
 function loadScript(url) {
-  var index  = window.document.getElementsByTagName("script")[0]
-  var script = window.document.createElement("script")
+  const index  = window.document.getElementsByTagName("script")[0]
+  const script = window.document.createElement("script")
   script.src = url
   script.async = true
   script.defer = true
