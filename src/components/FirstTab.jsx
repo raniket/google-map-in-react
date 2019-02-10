@@ -6,40 +6,36 @@ import './FirstTab.css';
 class FirstTab extends Component {
   constructor(props) {
     super(props);
-    this.state = {}
+    this.state = {};
   }
 
-  // static defaultProps = {
-  //   center: {
-  //     lat: 59.95,
-  //     lng: 30.33
-  //   },
-  //   zoom: 11
-  // };
-
   componentDidMount() {
-    this.renderMap();
-    this.props.updateCurrentPath(this.props.match.path);
+    const LOAD_GEO_JSON_DATA_URL = process.env.REACT_APP_LOAD_GEO_JSON_DATA_URL;
+    fetch(LOAD_GEO_JSON_DATA_URL)
+    .then(res => res.json())
+    .then(data => data.features[0].geometry.coordinates[0])
+    .then(coordinates => {
+      coordinates = coordinates.map(item => ({lat: item[1], lng: item[0]}));
+      this.setState({...this.state,  coordinates});
+      this.renderMap();
+      this.props.updateCurrentPath(this.props.match.path);
+    });
   }
 
   // Embade the google maps script to html DOM and attache the callback to the window object.
   renderMap = () => {
-    loadScript('https://maps.googleapis.com/maps/api/js?key=AIzaSyDzlczruooLb_Y0ek5e8VY8Z_sPxva3ofQ&callback=initMap');
-    window.initMap = this.initMap
+    loadScript(`${process.env.REACT_APP_GOOGLE_MAPS_API}`);
+    window.initMap = this.initMap;
   }
 
   initMap = () => {
-
-    // Creat map instance for Gurugram, provided lat lng.
+    // Creat map instance for Gurugram, with provided lat lng.
     const map = new window.google.maps.Map(document.getElementById('map'), {
       zoom: 11,
       center: {lat: 28.4228859, lng: 76.8496963},
     });
 
-    // Load geojson data for Gurgram + Haryana from this url.
-    const loadGeoJsonData = 'https://nominatim.openstreetmap.org/search.php?q=Gurugram+Haryana&polygon_geojson=1&format=geojson';
-
-    // Provided by the client.
+    // Bound, provided by the client.
     const bound = {
       north: 28.543048,
       south: 28.343115132,
@@ -47,7 +43,7 @@ class FirstTab extends Component {
       west: 76.8536989,
     }
 
-    // Define the LatLng coordinates for the outer path.
+    // Define the LatLng coordinates for the outer rectangle.
     const outerCoords = [
       {lat: 28.543048, lng: 76.8536989}, // north west
       {lat: 28.343115132, lng: 76.8536989}, // south west
@@ -56,7 +52,6 @@ class FirstTab extends Component {
     ];
 
     const grids = [];
-    // Create grid, in the case 16*16 grid.
     const createGrids = (dimentation, bound) => {
       const {north, south, east, west} = bound;
       const DIF_NS_16 = (north - south) / 16;
@@ -74,38 +69,45 @@ class FirstTab extends Component {
       }
     };
 
+    // Create grids, in this case 16*16 grids.
     createGrids(16, bound);
-    
-    // // Define the LatLng coordinates for an inner path.
-    // var innerCoords1 = [
-    //   {lat: -33.364, lng: 154.207},
-    //   {lat: -34.364, lng: 154.207},
-    //   {lat: -34.364, lng: 155.207},
-    //   {lat: -33.364, lng: 155.207}
-    // ];
 
-    // map.data.add({geometry: new window.google.maps.Data.Polygon([outerCoords, ...grids])})
-    map.data.loadGeoJson(loadGeoJsonData);
     map.data.setStyle({
-      // fillColor: 'green',
-      // strokeWeight: 1
+      strokeWeight: 1,
+      strokeColor: 'DodgerBlue',
+      strokeOpacity: 0.9,
     });
 
-    // Draw polygon for Gurugram place on map using map instance and provided bound.
+    // Draw outer ranctangle.
     new window.google.maps.Polygon({
       map: map,
       paths: outerCoords,
-      strokeColor: '#FF0000',
+      strokeColor: '#000000',
       strokeOpacity: 0.8,
       strokeWeight: 2,  
-      // fillColor: '#FF0000',
       fillOpacity: 0.35,
-      // draggable: true,
       editable: true,
       geodesic: true
     });
 
-    map.data.add({geometry: new window.google.maps.Data.Polygon([outerCoords, ...grids])})
+    // Polygon for Gurugram.
+    const gurugramPolygon = new window.google.maps.Polygon({
+      map: map,
+      paths:  this.state.coordinates
+    });
+
+    // Remove the grids which are not part of Gurugram.
+    const visibleGrids = [];
+    grids.forEach(grid => {
+      grid.forEach(point => {
+        if(window.google.maps.geometry.poly.containsLocation(new window.google.maps.LatLng(point.lat, point.lng), gurugramPolygon)) {
+          visibleGrids.push(grid);
+        }
+      });
+    });
+
+    // Draw visible grids on the map.
+    map.data.add({geometry: new window.google.maps.Data.Polygon([outerCoords, ...visibleGrids])})
     
   }
 
